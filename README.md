@@ -36,7 +36,7 @@ docker compose --profile quick-tunnel up -d && docker compose logs quick-tunnel 
 Resposta de `/health`:
 
 ```json
-{"status":"ok","service":"twelve-factor-health","release":"7ea63f3","instance":"web1",
+{"status":"ok","service":"twelve-factor-health","release":"<sha do commit>","instance":"web1",
  "uptimeSeconds":38,"timestamp":"2026-09-27T13:36:07.560Z","checks":{"redis":"up"}}
 ```
 
