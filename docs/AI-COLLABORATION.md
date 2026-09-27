@@ -24,7 +24,8 @@ Data: 27 de setembro de 2026.
    - A demo de SIGTERM imprimia duas linhas quando a conexão era recusada; foi reescrita com `if`.
    - A mensagem `config valid` aparecia mesmo quando o Redis estava fora; virou `config loaded`, seguida do erro.
 7. **Cloudflare sem zona DNS.** A conta não tem domínio, então um túnel nomeado não teria hostname público. Em vez de voltar ao Quick Tunnel (URL efêmero, sem conta), o agente consultou a documentação pelo MCP e montou: túnel remoto `twelve-factor-health` → **VPC Service** (`web1:8080`, DNS resolvido pelo túnel) → Worker em `danielrody.workers.dev` com binding `vpc_service`. Tudo feito pela API: criação do túnel, token, VPC Service, subdomínio `workers.dev`, upload do Worker.
-8. **Token do túnel.** Foi obtido pela API e gravado **apenas** no `.env` local (gitignored, permissão 600). O Compose falha com mensagem clara se ele faltar (`${TUNNEL_TOKEN:?...}`).
+8. **DNS em cache derrubou a descartabilidade.** Depois de recriar os containers com o release `7ea63f3`, o URL público passou a responder `servedBy: web2`. Reiniciar o cloudflared não resolveu: o DNS do Docker responde com TTL 600 e a resolução de `web1` fica em cache na borda. A correção foi dar IPs fixos às réplicas (`172.30.0.0/24`) e apontar o VPC Service para `172.30.0.11` em vez do nome.
+9. **Token do túnel.** Foi obtido pela API e gravado **apenas** no `.env` local (gitignored, permissão 600). O Compose falha com mensagem clara se ele faltar (`${TUNNEL_TOKEN:?...}`).
 
 ## O que eu mudei ou recusei
 

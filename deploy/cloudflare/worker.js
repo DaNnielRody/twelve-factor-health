@@ -3,7 +3,8 @@
 // Zero Trust tunnel (cloudflared running next to the containers, outbound-only).
 //
 //   browser -> <name>.workers.dev (this Worker) -> env.APP (VPC Service)
-//           -> tunnel "twelve-factor-health" -> http://web1:8080 on the compose network
+//           -> tunnel "twelve-factor-health" -> 172.30.0.11:8080 (web1) on the compose network
+// The VPC Service decides the destination; "web1" below only sets the Host header.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);

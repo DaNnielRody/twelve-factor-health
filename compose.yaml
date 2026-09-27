@@ -35,15 +35,22 @@ services:
       interval: 5s
       retries: 10
 
+  # Fixed addresses: the tunnel's VPC Service resolves "web1" once and the edge
+  # caches it (Docker DNS answers with TTL 600). Recreated containers could
+  # otherwise swap IPs and public traffic would silently land on the wrong replica.
   web1:
     <<: *web
     hostname: web1
     ports: ["8081:8080"]
+    networks:
+      default: { ipv4_address: 172.30.0.11 }
 
   web2:
     <<: *web
     hostname: web2
     ports: ["8082:8080"]
+    networks:
+      default: { ipv4_address: 172.30.0.12 }
 
   # Named Zero Trust tunnel: outbound-only connection to Cloudflare, no inbound port
   # opened on this host. Ingress (hostname -> http://web1:8080) lives in the tunnel
@@ -62,6 +69,12 @@ services:
     profiles: ["quick-tunnel"]
     command: tunnel --no-autoupdate --url http://web1:8080
     depends_on: [web1]
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   redis-data:

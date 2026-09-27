@@ -36,7 +36,7 @@ docker compose --profile quick-tunnel up -d && docker compose logs quick-tunnel 
 Resposta de `/health`:
 
 ```json
-{"status":"ok","service":"twelve-factor-health","release":"5d1c2e0","instance":"web1",
+{"status":"ok","service":"twelve-factor-health","release":"7ea63f3","instance":"web1",
  "uptimeSeconds":38,"timestamp":"2026-09-27T13:36:07.560Z","checks":{"redis":"up"}}
 ```
 
@@ -127,10 +127,12 @@ navegador ──HTTPS──▶ twelve-factor-health.danielrody.workers.dev   (Wo
                          ▼
                túnel Zero Trust "twelve-factor-health"   (só saída; nenhuma porta aberta no host)
                          ▼
-          cloudflared ──▶ web1:8080 ──▶ redis:6379         (rede do Compose)
+          cloudflared ──▶ web1 172.30.0.11:8080 ──▶ redis:6379   (rede do Compose)
 ```
 
 A conta Cloudflare não tem zona DNS própria. Um túnel nomeado precisa de um hostname para ter ingress público, então a borda é um Worker em `workers.dev` que alcança a origem pelo túnel com um binding **Workers VPC**. A origem continua inacessível pela internet, exceto através desse binding.
+
+O VPC Service aponta para o **IP fixo** de `web1` (sub-rede `172.30.0.0/24` no `compose.yaml`), não para o nome `web1`. O DNS interno do Docker responde com TTL de 600 s e a borda guarda a resolução; ao recriar os containers os IPs trocaram e o tráfego público caiu em silêncio no `web2`. Com endereço fixo, recriar containers (fator IX) não muda o destino.
 
 ## Colaboração com IA
 
