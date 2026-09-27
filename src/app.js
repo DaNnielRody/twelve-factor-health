@@ -75,7 +75,15 @@ export function buildApp(config, { logger } = {}) {
       reply.code(503);
       return { error: 'backing service not attached', hint: 'set REDIS_URL' };
     }
-    const hits = await redis.incr(HITS_KEY);
+    let hits;
+    try {
+      hits = await redis.incr(HITS_KEY);
+    } catch (err) {
+      // The resource is attached but away: say so instead of leaking a 500.
+      req.log.warn({ backingService: 'redis', err: err.message }, 'backing service unavailable');
+      reply.code(503);
+      return { error: 'backing service unavailable' };
+    }
     req.log.info({ hits }, 'hit counted');
     return { hits, servedBy: os.hostname(), pid: process.pid };
   });

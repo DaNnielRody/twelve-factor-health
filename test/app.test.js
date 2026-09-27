@@ -49,6 +49,14 @@ test('GET /api/hits refuses to keep state in memory without Redis', async (t) =>
   assert.equal(res.statusCode, 503);
 });
 
+test('GET /api/hits returns 503, not 500, when Redis is attached but down', async (t) => {
+  const app = buildApp(loadConfig({ LOG_LEVEL: 'silent', REDIS_URL: 'redis://127.0.0.1:1' }));
+  t.after(() => app.close());
+  const res = await app.inject({ method: 'GET', url: '/api/hits' });
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.json().error, 'backing service unavailable');
+});
+
 test('config reads PORT from the environment and rejects bad values', () => {
   assert.equal(loadConfig({}).port, 3000);
   assert.equal(loadConfig({ PORT: '8080' }).port, 8080);

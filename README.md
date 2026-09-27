@@ -79,7 +79,7 @@ Todas lidas em um único lugar, [`src/config.js`](src/config.js), validadas na p
 | Run (containers) | `docker compose up -d` / `docker compose down` | Compose envia SIGTERM e espera `stop_grace_period: 15s` |
 | Testes | `npm test` | `node:test` com `fastify.inject`, sem dependências de desenvolvimento |
 | Demo SIGTERM | `scripts/demo-sigterm.sh` | Requisição de 3 s em andamento + SIGTERM → termina com 200, processo sai com 0 |
-| Tarefas admin | `npm run admin:check` · `admin:config` · `admin:reset-hits` | Mesmo código, mesma config (em container: `docker compose run --rm web1 node bin/admin.js check`) |
+| Tarefas admin | `npm run admin:check` · `admin:config` · `admin:reset-hits` | Mesmo código, mesma config (em container: `docker compose exec web1 node bin/admin.js check`) |
 
 ## Mapeamento dos Doze Fatores
 
