@@ -1,0 +1,26 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Build image (Factor V - build stage)
+        run: docker build --build-arg RELEASE_VERSION=${GITHUB_SHA::7} -t twelve-factor-health:${GITHUB_SHA::7} .
+      - name: Smoke test (Factor VII - port from env)
+        run: |
+          docker run -d --name smoke -e PORT=9090 -p 9090:9090 twelve-factor-health:${GITHUB_SHA::7}
+          for i in $(seq 1 30); do curl -fs localhost:9090/health && break; sleep 1; done
+          curl -fs localhost:9090/health | tee /dev/stderr | grep -q '"status":"ok"'
+          docker stop smoke
+          docker logs smoke | grep -q 'shutdown complete'

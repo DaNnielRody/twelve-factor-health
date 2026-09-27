@@ -1,0 +1,67 @@
+# Local run stage: two identical stateless web processes sharing one attached Redis.
+#   docker compose up -d --build            web1 on :8081, web2 on :8082
+#   docker compose --profile tunnel up -d   + Cloudflare Zero Trust tunnel (needs TUNNEL_TOKEN)
+#   docker compose --profile quick-tunnel up -d   + throwaway *.trycloudflare.com URL, no account
+name: twelve-factor-health
+
+x-web: &web
+  image: twelve-factor-health:${RELEASE_VERSION:-dev}
+  build:
+    context: .
+    args:
+      RELEASE_VERSION: ${RELEASE_VERSION:-dev}
+  environment:
+    PORT: 8080
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    REDIS_URL: redis://redis:6379
+    SHUTDOWN_TIMEOUT_MS: ${SHUTDOWN_TIMEOUT_MS:-10000}
+  depends_on:
+    redis:
+      condition: service_healthy
+  # Factor VI - the container filesystem is read-only: any attempt to keep
+  # local state would crash instead of silently working on one replica.
+  read_only: true
+  # Factor IX - give the process time to drain before Docker sends SIGKILL.
+  stop_grace_period: 15s
+  restart: unless-stopped
+
+services:
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  web1:
+    <<: *web
+    hostname: web1
+    ports: ["8081:8080"]
+
+  web2:
+    <<: *web
+    hostname: web2
+    ports: ["8082:8080"]
+
+  # Named Zero Trust tunnel: outbound-only connection to Cloudflare, no inbound port
+  # opened on this host. Ingress (hostname -> http://web1:8080) lives in the tunnel
+  # config on Cloudflare; the token is the only thing this side needs.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+    depends_on: [web1]
+    restart: unless-stopped
+
+  quick-tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["quick-tunnel"]
+    command: tunnel --no-autoupdate --url http://web1:8080
+    depends_on: [web1]
+
+volumes:
+  redis-data:

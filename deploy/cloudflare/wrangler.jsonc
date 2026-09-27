@@ -1,0 +1,12 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "twelve-factor-health",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-16",
+  "workers_dev": true,
+  // VPC Service "twelve-factor-health-web1": hostname web1, port 8080, resolved
+  // through tunnel 071122b4-3bde-402c-af19-dcd21121de3e.
+  "vpc_services": [
+    { "binding": "APP", "service_id": "01a0e313-5d1f-7c82-b163-0dfec0ab4444" }
+  ]
+}

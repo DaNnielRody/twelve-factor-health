@@ -1,0 +1,25 @@
+{
+  "name": "twelve-factor-health",
+  "version": "1.0.0",
+  "description": "Minimal Twelve-Factor HTTP service with a /health endpoint (Node.js + Fastify)",
+  "type": "module",
+  "main": "src/server.js",
+  "license": "MIT",
+  "author": "Daniel Rody",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "test": "node --test test/*.test.js",
+    "admin": "node bin/admin.js",
+    "admin:check": "node bin/admin.js check",
+    "admin:config": "node bin/admin.js config",
+    "admin:reset-hits": "node bin/admin.js reset-hits"
+  },
+  "dependencies": {
+    "fastify": "5.12.5",
+    "ioredis": "6.0.0"
+  }
+}
